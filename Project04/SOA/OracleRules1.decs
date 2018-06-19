@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<decisionServices xmlns="http://xmlns.oracle.com/bpel/rules" name="OracleRules1">
+    <ruleEngineProvider provider="Oracle_11.0.0.0.0" name="OracleRulesSDK">
+        <repository type="SCA-Archive">
+            <path>Project04/oracle/rules/project04/OracleRules1.rules</path>
+        </repository>
+    </ruleEngineProvider>
+    <decisionService name="OracleRules1_DecisionService_1" ruleEngineProviderReference="OracleRulesSDK" targetNamespace="http://xmlns.oracle.com/OracleRules1/OracleRules1_DecisionService_1">
+        <catalog>OracleRules1</catalog>
+        <pattern name="CallFunctionStateless">
+            <arguments>
+                <call>project04.OracleRules1.DecisionService_1</call>
+            </arguments>
+        </pattern>
+        <pattern name="CallFunctionStateful">
+            <arguments>
+                <call>project04.OracleRules1.DecisionService_1</call>
+            </arguments>
+        </pattern>
+    </decisionService>
+    <schemaInformation>
+        <dictionary fqnPackage="project04" fqnName="OracleRules1" updateNumber="25">
+            <schemaBrowser>
+                <package>th.go.excise</package>
+                <namespace>http://www.excise.go.th</namespace>
+            </schemaBrowser>
+            <schemaImport namespace="http://www.excise.go.th" localPart="tax.xsd" schemaLocation="Schemas/tax.xsd">
+                <import namespace="http://www.excise.go.th" localPart="tax.xsd" schemaLocation="Schemas/tax.xsd"/>
+            </schemaImport>
+        </dictionary>
+    </schemaInformation>
+</decisionServices>

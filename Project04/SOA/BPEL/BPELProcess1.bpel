@@ -1,0 +1,111 @@
+<?xml version = "1.0" encoding = "UTF-8" ?>
+<!--
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  Oracle JDeveloper BPEL Designer 
+  
+  Created: Tue Jun 19 23:15:08 ICT 2018
+  Author:  Benyapa
+  Type: BPEL 2.0 Process
+  Purpose: Synchronous BPEL Process
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+-->
+<process name="BPELProcess1"
+               targetNamespace="http://xmlns.oracle.com/Application04/Project04/BPELProcess1"
+               xmlns="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
+               xmlns:client="http://xmlns.oracle.com/Application04/Project04/BPELProcess1"
+               xmlns:ora="http://schemas.oracle.com/xpath/extension"
+               xmlns:ui="http://xmlns.oracle.com/soa/designer"
+               xmlns:bpelx="http://schemas.oracle.com/bpel/extension"
+         xmlns:bpel="http://docs.oasis-open.org/wsbpel/2.0/process/executable" xmlns:ns1="http://www.excise.go.th"
+         xmlns:ns2="http://xmlns.oracle.com/OracleRules1/OracleRules1_DecisionService_1"
+         xmlns:ns3="http://xmlns.oracle.com/bpel">
+    <!-- 
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        PARTNERLINKS                                                      
+        List of services participating in this BPEL process               
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    -->
+
+  <!-- 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      VARIABLES                                                        
+      List of messages and XML documents used within this BPEL process 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  -->
+  <import namespace="http://xmlns.oracle.com/Application04/Project04/BPELProcess1" location="../WSDLs/BPELProcess1.wsdl"
+          importType="http://schemas.xmlsoap.org/wsdl/" ui:processWSDL="true"/>
+  <import namespace="http://xmlns.oracle.com/OracleRules1/OracleRules1_DecisionService_1"
+          location="../Schemas/OracleRules1_DecisionService_1MessageTypes.xsd"
+          importType="http://www.w3.org/2001/XMLSchema"/>
+  <import namespace="http://www.excise.go.th" location="../Schemas/tax.xsd"
+          importType="http://www.w3.org/2001/XMLSchema"/>
+  <partnerLinks>
+    <partnerLink name="RestService" partnerLinkType="client:BPELProcess1" myRole="BPELProcess1Provider"/>
+    <partnerLink name="OracleRules1.OracleRules1_DecisionService_1"
+                 partnerLinkType="ns2:OracleRules1.OracleRules1_DecisionService_1" partnerRole="IDecisionService"/>
+  </partnerLinks>
+  <variables>
+    <!-- Reference to the message passed as input during initiation -->
+    <variable name="inputVariable" messageType="client:BPELProcess1RequestMessage"/>
+
+    <!-- Reference to the message that will be returned to the requester-->
+    <variable name="outputVariable" messageType="client:BPELProcess1ResponseMessage"/>
+    <variable name="tmpMD" element="ns1:InputMD"/>
+    <variable name="inputRule" element="ns2:callFunctionStateless"/>
+    <variable name="outputRule" element="ns2:callFunctionStatelessDecision"/>
+  </variables>
+
+  <!-- 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+     ORCHESTRATION LOGIC                                               
+     Set of activities coordinating the flow of messages across the    
+     services integrated within this business process                  
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  -->
+  <sequence name="main">
+
+    <!-- Receive input from requestor. (Note: This maps to operation defined in BPELProcess1.wsdl) -->
+    <receive name="receiveInput" variable="inputVariable" createInstance="yes" partnerLink="RestService"
+             portType="client:BPELProcess1" operation="process"/>
+    <assign name="Assign1">
+      <copy>
+        <from>$inputVariable.payload/ns1:ProductInfo/ns1:ProductCode</from>
+        <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$tmpMD/ns1:ProductCode</to>
+      </copy>
+      <copy>
+        <from>$inputVariable.payload/ns1:ProductInfo/ns1:Degree</from>
+        <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$tmpMD/ns1:Degree</to>
+      </copy>
+      <copy>
+        <from>$inputVariable.payload/ns1:ProductInfo/ns1:Size</from>
+        <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$tmpMD/ns1:Size</to>
+      </copy>
+      <copy>
+        <from>$inputVariable.payload/ns1:ProductInfo/ns1:Quantity</from>
+        <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$tmpMD/ns1:Quantity</to>
+      </copy>
+      <copy>
+        <from>$inputVariable.payload/ns1:ProductInfo/ns1:RetailNoVAT</from>
+        <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$tmpMD/ns1:RetailNoVAT</to>
+      </copy>
+    </assign>
+    <assign name="Assign2">
+      <copy>
+        <from>$tmpMD</from>
+        <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$inputRule/ns2:parameterList/ns1:InputMD</to>
+      </copy>
+    </assign>
+    <invoke name="Invoke1" partnerLink="OracleRules1.OracleRules1_DecisionService_1"
+            portType="ns2:IDecisionService" operation="callFunctionStateless" inputVariable="inputRule"
+            outputVariable="outputRule" bpelx:invokeAsDetail="no"/>
+    <assign name="Assign3">
+      <copy>
+        <from>$outputRule/ns2:resultList/ns1:OutputSchema/ns1:ExciseTax</from>
+        <to expressionLanguage="urn:oasis:names:tc:wsbpel:2.0:sublang:xpath1.0">$outputVariable.payload/ns1:ExciseTax</to>
+      </copy>
+    </assign>
+    <!-- Generate reply to synchronous request -->
+    <reply name="replyOutput" variable="outputVariable" partnerLink="RestService" portType="client:BPELProcess1"
+           operation="process"/>
+  </sequence>
+</process>
